@@ -16,7 +16,7 @@ using namespace cv;
 class DeepSort: public ncnnModelBase
 {
 public:
-    DeepSort(QObject *parent = 0);
+    DeepSort();
     ~DeepSort();
 
     bool getRectsFeature(const cv::Mat& img, DETECTIONS& d);

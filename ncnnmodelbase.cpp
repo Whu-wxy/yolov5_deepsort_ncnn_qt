@@ -1,32 +1,20 @@
 #include "ncnnModelBase.h"
 
-ncnnModelBase::ncnnModelBase(QObject *parent) : QObject(parent)
+ncnnModelBase::ncnnModelBase()
 {
 #if NCNN_VULKAN
     net.opt.use_vulkan_compute = ncnn::get_gpu_count() > 0;
 #endif
 }
 
-ncnnModelBase::ncnnModelBase(QString modelName, QObject *parent) : QObject(parent)
+ncnnModelBase::ncnnModelBase(string modelName)
 {
     bLoad = false;
 #if NCNN_VULKAN
     net.opt.use_vulkan_compute = ncnn::get_gpu_count() > 0;
 #endif
 
-    bool res = moveFiles(modelName);
-    if(res)
-    {
-        QString dataDir;
-#ifdef Q_OS_ANDROID
-        AndroidSetup setup;
-        dataDir = setup.getAppDataDir();
-#else
-        dataDir = "D:\\QtWork\\DeepSORT-master\\src";
-#endif
-
-        load(dataDir, modelName);
-    }
+    load(dataDir, modelName);
 }
 
 ncnnModelBase::~ncnnModelBase()
@@ -35,37 +23,30 @@ ncnnModelBase::~ncnnModelBase()
 }
 
 
-bool ncnnModelBase::load(QString baseDir, QString modelName)
+bool ncnnModelBase::load(string baseDir, string modelName)
 {
     unload();
 
-    qDebug()<<"[NCNN] model load begin";
+    cout<<"[NCNN] model load begin"<<endl;
 
-    QString binFile = baseDir + "//" + modelName + ".bin";
-    QString paramFile = baseDir + "//" + modelName + ".param";
-    if(QFile::exists(binFile) && QFile::exists(binFile))
-    {
-        int res = net.load_param(paramFile.toLatin1().data());
-        qDebug()<<"[NCNN] param consumed: "<<res;
+    string binFile = baseDir + "//" + modelName + ".bin";
+    string paramFile = baseDir + "//" + modelName + ".param";
 
-        int consumed = net.load_model(binFile.toLatin1().data());
-        qDebug()<<"[NCNN] bin consumed: "<<consumed;
+    try {
+        int res = net.load_param(paramFile.c_str());
+        cout<<"[NCNN] param consumed: "<<res;
 
-        qDebug()<<"[NCNN] model loaded: "<<binFile;
+        int consumed = net.load_model(binFile.c_str());
+        cout<<"[NCNN] bin consumed: "<<consumed<<endl;
+
+        cout<<"[NCNN] model loaded: "<<binFile<<endl;
         bLoad = true;
     }
-    else
-    {
-        qDebug()<<"[NCNN] model not loaded.";
-        bLoad = false;
+    catch (...) {
+        cout<<"[NCNN] model loaded failed. "<<endl;
     }
-    return bLoad;
-}
 
-bool ncnnModelBase::load(QString modelPath)
-{
-    QFileInfo fileInfo(modelPath);
-    return load(fileInfo.absolutePath(), fileInfo.baseName());
+    return bLoad;
 }
 
 void ncnnModelBase::unload()
@@ -74,57 +55,6 @@ void ncnnModelBase::unload()
 
     bLoad = false;
     net.clear();
-}
-
-
-bool ncnnModelBase::moveFiles(QString modelName)
-{
-#ifdef Q_OS_ANDROID
-    AndroidSetup setup;
-    QString dataDir = setup.getAppDataDir();
-    qDebug()<<"data Dir:"<<dataDir;
-
-    if(QFile::exists(dataDir + "/" + modelName + ".bin"))
-        return true;
-
-    QString binFile = QString("assets:/dst/%1.bin").arg(modelName);
-    QString paramFile = QString("assets:/dst/%1.param").arg(modelName);
-
-    if(QFile::exists(binFile))
-        qDebug()<<binFile<<" exist";
-    else
-        qDebug()<<binFile<<" not exist";
-
-    if(QFile::exists(paramFile))
-        qDebug()<<paramFile<<" exist";
-    else
-        qDebug()<<paramFile<<" not exist";
-
-    bool bMove = true;
-    QString dstName = dataDir + "/" + modelName + ".bin";
-    if(!QFile::copy(binFile, dstName))
-    {
-        qDebug()<<"copy bin fail";
-        bMove = false;
-    }
-
-    dstName = dataDir + "/" + modelName + ".param";
-    if(!QFile::copy(paramFile, dstName))
-    {
-        qDebug()<<"copy param fail";
-        bMove = false;
-    }
-
-    dstName = dataDir + "/test.jpg";
-    if(!QFile::copy("assets:/dst/test.jpg", dstName))
-    {
-        qDebug()<<"copy image fail";
-        bMove = false;
-    }
-
-    qDebug()<<"move status:"<<bMove;
-    return bMove;
-#endif // Q_OS_ANDROID
 }
 
 

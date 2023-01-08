@@ -219,8 +219,8 @@ void generate_proposals(const ncnn::Mat &anchors, int stride,
 
 
 //yolov5n_ship-opt-fp16
-YoloV5CustomLayer::YoloV5CustomLayer(QObject *parent)
-    : ncnnModelBase("yolov5n_human-opt-fp16", parent)
+YoloV5CustomLayer::YoloV5CustomLayer()
+    : ncnnModelBase("yolov5n_human-opt-fp16")
 {
 //        // opt 需要在加载前设置
 //        Net->opt.use_vulkan_compute = toUseGPU;  // gpu
@@ -237,130 +237,19 @@ bool YoloV5CustomLayer::predict(cv::Mat & frame)
 {
     double ncnnstart = ncnn::get_current_time();
 
-    QTime time;
-    time.start();
     std::vector<YoloObject> boxes = detect(frame, 0.25, 0.45);
-    qDebug()<<"QTime: "<<time.elapsed()<<"ms";
 //    draw_objects(frame, boxes);
 
     for(YoloObject &boxInfo: boxes)
     {
-//        qDebug()<<"boxInfo: "<<boxInfo.x1<<", "<<boxInfo.y1<<", "<<boxInfo.x2<<", "<<boxInfo.y2;
         rectangle(frame, Rect(boxInfo.x, boxInfo.y, boxInfo.w, boxInfo.h), Scalar(0, 255, 0), 2);
 //        putText(frame, labels[boxInfo.label], Point(boxInfo.x1, boxInfo.y1), FONT_HERSHEY_SIMPLEX, 5, Scalar(255, 0, 0), 5);
     }
     double ncnnfinish = ncnn::get_current_time();
     double model_time = (double)(ncnnfinish - ncnnstart) / 1000;
-    qDebug()<<"model_time: "<<model_time;
     putText(frame, to_string(model_time), Point(frame.cols/2, frame.rows/2), FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 255, 0), 1);
     return true;
 }
-
-//std::vector<YoloObject> YoloV5CustomLayer::detect(cv::Mat image, float threshold, float nms_threshold) {
-
-//    // letterbox pad to multiple of 32
-//    int w = image.cols;
-//    int h = image.rows;
-//    int width = w;
-//    int height = h;
-//    float scale = 1.f;
-//    // 长边缩放到input_size
-//    if (w > h) {
-//        scale = (float) input_size / w;
-//        w = input_size;
-//        h = h * scale;
-//    } else {
-//        scale = (float) input_size / h;
-//        h = input_size;
-//        w = w * scale;
-//    }
-
-//    resize(image, image, Size(640,640));
-
-//    cout<<"w: "<<image.cols<<endl;
-//    cout<<"h: "<<image.rows<<endl;
-////    ncnn::Mat in_net = ncnn::Mat::from_pixels_resize(image.data, ncnn::Mat::PIXEL_BGR2RGB, width, height, 640,640);
-
-//    ncnn::Mat in_net = ncnn::Mat::from_pixels(image.data, ncnn::Mat::PIXEL_BGR2RGB, 640,640);
-
-//    // pad to target_size rectangle
-//    // yolov5/utils/datasets.py letterbox
-//    int wpad = (w + MAX_STRIDE - 1) / MAX_STRIDE * MAX_STRIDE - w;
-//    int hpad = (h + MAX_STRIDE - 1) / MAX_STRIDE * MAX_STRIDE - h;
-//    cout<<"wpad: "<<wpad<<endl;
-//    cout<<"hpad: "<<hpad<<endl;
-//    ncnn::Mat in_pad = in_net;
-////    ncnn::copy_make_border(in_net, in_pad, hpad / 2, hpad - hpad / 2, wpad / 2, wpad - wpad / 2, ncnn::BORDER_CONSTANT, 114.f);
-
-//    cout<<"in_pad w: "<<in_pad.w<<endl;
-//    cout<<"in_pad h: "<<in_pad.h<<endl;
-
-//    float mean[3] = {0, 0, 0};
-//    float norm[3] = {1 / 255.f, 1 / 255.f, 1 / 255.f};
-//    in_pad.substract_mean_normalize(mean, norm);
-//    auto ex = net.create_extractor();
-//    ex.set_light_mode(true);
-//    ex.set_num_threads(4);
-//    ex.input("images", in_pad);
-
-//    std::vector<YoloObject> proposals;
-//    // anchor setting from yolov5/models/yolov5s.yaml
-
-//    for (const auto &layer: layers) {
-//        ncnn::Mat blob;
-//        ex.extract(layer.name.c_str(), blob);
-//        ncnn::Mat anchors(6);
-//        anchors[0] = layer.anchors[0].width;
-//        anchors[1] = layer.anchors[0].height;
-//        anchors[2] = layer.anchors[1].width;
-//        anchors[3] = layer.anchors[1].height;
-//        anchors[4] = layer.anchors[2].width;
-//        anchors[5] = layer.anchors[2].height;
-//        std::vector<YoloObject> objectsx;
-//        generate_proposals(anchors, layer.stride, in_pad, blob, threshold, objectsx);
-
-//        proposals.insert(proposals.end(), objectsx.begin(), objectsx.end());
-//    }
-
-//    qDebug()<<"proposals: "<<proposals.size();
-
-//    // sort all proposals by score from highest to lowest
-//    qsort_descent_inplace(proposals);
-
-//    // apply nms with nms_threshold
-//    std::vector<int> picked;
-//    nms_sorted_bboxes(proposals, picked, nms_threshold);
-
-//    int count = picked.size();
-//    qDebug()<<"nms picked: "<<count;
-
-//    std::vector<YoloObject> objects;
-//    objects.resize(count);
-//    for (int i = 0; i < count; i++) {
-//        objects[i] = proposals[picked[i]];
-
-//        // adjust offset to original unpadded
-//        float x0 = (objects[i].x - (wpad / 2)) / scale;
-//        float y0 = (objects[i].y - (hpad / 2)) / scale;
-//        float x1 = (objects[i].x + objects[i].w - (wpad / 2)) / scale;
-//        float y1 = (objects[i].y + objects[i].h - (hpad / 2)) / scale;
-
-//        // clip
-//        x0 = std::max(std::min(x0, (float) (width - 1)), 0.f);
-//        y0 = std::max(std::min(y0, (float) (height - 1)), 0.f);
-//        x1 = std::max(std::min(x1, (float) (width - 1)), 0.f);
-//        y1 = std::max(std::min(y1, (float) (height - 1)), 0.f);
-
-//        objects[i].x = x0;
-//        objects[i].y = y0;
-//        objects[i].w = x1 - x0;
-//        objects[i].h = y1 - y0;
-//    }
-
-//    return objects;
-
-//}
-
 
 std::vector<YoloObject> YoloV5CustomLayer::detect(cv::Mat image, float threshold, float nms_threshold) {
 

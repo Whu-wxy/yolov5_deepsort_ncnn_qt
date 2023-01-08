@@ -1,7 +1,7 @@
 TEMPLATE = app
 CONFIG += console c++11
 CONFIG -= app_bundle
-QT       += core gui
+QT       -= core gui
 
 win32{
 QMAKE_CXXFLAGS += -fopenmp

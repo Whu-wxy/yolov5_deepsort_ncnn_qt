@@ -1,6 +1,3 @@
-#include <QString>
-#include <QDebug>
-#include <QFile>
 #include <iostream>
 
 #include "YoloV5CustomLayer.h"
@@ -88,11 +85,8 @@ int main(int argc, char** argv)
         std::cout<<"Detections size:"<<detections.size()<<std::endl;
         if(deepsort.getRectsFeature(frame, detections))
         {
-            QTime time;
-            time.start();
             mytracker.predict();
             mytracker.update(detections);
-            qDebug()<<"QTime: "<<time.elapsed()<<"ms";
 
             std::vector<RESULT_DATA> result;
             for(Track& track : mytracker.tracks) {

@@ -8,11 +8,8 @@
 #include "opencv2/opencv.hpp"//添加Opencv相关头文件
 #include "ncnnmodelbase.h"
 
-#include <QTime>
-
 using namespace std;
 using namespace cv;
-
 
 namespace yolocv {
     typedef struct {
@@ -41,7 +38,7 @@ struct YoloObject {
 
 class YoloV5CustomLayer : public ncnnModelBase {
 public:
-    YoloV5CustomLayer(QObject *parent = 0);
+    YoloV5CustomLayer();
     virtual ~YoloV5CustomLayer();
 
     virtual bool    predict(cv::Mat & frame);
