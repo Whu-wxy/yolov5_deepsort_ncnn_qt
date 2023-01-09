@@ -1,7 +1,7 @@
 #include "DeepSort.h"
 #include <iostream>
 
-DeepSort::DeepSort(QObject *parent) : ncnnModelBase("deepsort_sim-opt-fp16")
+DeepSort::DeepSort() : ncnnModelBase("deepsort_sim-opt-fp16")
 {
     feature_dim = 512;
 }
